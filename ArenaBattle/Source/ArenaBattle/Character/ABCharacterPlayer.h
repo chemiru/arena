@@ -28,6 +28,12 @@ protected:
 public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// Character Control Section
+protected:
+	virtual void SetCharacterControlData(const class UABCharacterControlData* CharacterControlData) override;
+
+	
+	
 	// CameraSection
 
 protected:

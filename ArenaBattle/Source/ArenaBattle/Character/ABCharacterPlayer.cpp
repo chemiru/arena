@@ -5,6 +5,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/PlayerController.h"
+#include "ABCharacterControlData.h"
+
 
 AABCharacterPlayer::AABCharacterPlayer()
 {
@@ -77,6 +79,22 @@ void AABCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
     EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AABCharacterPlayer::Move);
     EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AABCharacterPlayer::Look);
+}
+
+void AABCharacterPlayer::SetCharacterControlData(const UABCharacterControlData* CharacterControlData)
+{
+    Super::SetCharacterControlData(CharacterControlData);
+
+    CameraBoom->TargetArmLength = CharacterControlData->TargetArmLength;
+    CameraBoom->SetRelativeRotation(CharacterControlData->RelativeRotation);
+    CameraBoom->bUsePawnControlRotation = CharacterControlData->bUsePawnControlRotation;
+    CameraBoom->bInheritPitch = CharacterControlData->bInheritPitch;
+    CameraBoom->bInheritYaw = CharacterControlData->bInheritYaw;
+    CameraBoom->bInheritRoll = CharacterControlData->bInheritRoll;
+    CameraBoom->bDoCollisionTest = CharacterControlData->bDoCollisionTest;
+
+
+
 }
 
 void AABCharacterPlayer::Move(const FInputActionValue& Value)

@@ -5,6 +5,9 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ABCharacterControlData.h"
+#include "Animation/AnimMontage.h"
+#include "ABComboActionData.h"
+
 
 
 // Sets default values
@@ -66,6 +69,12 @@ AABCharacterBase::AABCharacterBase()
 
     }
 
+   /* static ConstructorHelpers::FObjectFinder<UAnimMontage> ComboMontageRef(TEXT("/Script/Engine.AnimMontage'/Game/ArenaBattle/Animation/AM_ComboAttack.AM_ComboAttack'"));
+    if (ComboMontageRef.Succeeded())
+    {
+        ComboActionMontage = ComboMontageRef.Object;
+    } 블루프린트에 설정되어 있어 초기화 없어도 됨*/
+
 }
 
 void AABCharacterBase::SetCharacterControlData
@@ -82,6 +91,93 @@ void AABCharacterBase::SetCharacterControlData
     GetCharacterMovement()->RotationRate = CharacterControlData->RotationRate;
 
 }
+
+void AABCharacterBase::ProcessComboCommand()
+{
+   /* UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    AnimInstance->Montage_Play(ComboActionMontage);*/
+
+    if (CurrentCombo == 0)
+    {
+
+        ComboActionBegin();
+        return;
+    }
+
+    if (!ComboTimerHandle.IsValid())
+    {
+        HasNextComboCommand = false;
+
+    }
+    else
+    {
+        HasNextComboCommand = true;
+
+    }
+
+}
+
+void AABCharacterBase::ComboActionBegin()
+{
+    // ComboStatus
+
+    CurrentCombo = 1;
+
+    // MovementSetting
+    GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+    
+    // Animation Setting
+    const float AttackSpeedRate = 1.0f;
+    UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+    AnimInstance->Montage_Play(ComboActionMontage, AttackSpeedRate);
+
+    FOnMontageEnded EndDelegate;
+    EndDelegate.BindUObject(this, &AABCharacterBase::ComboActionEnd);
+    AnimInstance->Montage_SetEndDelegate(EndDelegate, ComboActionMontage);
+
+    ComboTimerHandle.Invalidate();
+    SetComboCheckTimer();
+}
+
+void AABCharacterBase::ComboActionEnd(UAnimMontage* TargetMontage, bool IsProperlyEnded)
+{
+    ensure(CurrentCombo != 0);
+    CurrentCombo = 0;
+    GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+
+}
+
+void AABCharacterBase::SetComboCheckTimer()
+{
+    int32 ComboIndex = CurrentCombo - 1;
+    ensure(ComboActionData->EffectiveFrameCount.IsValidIndex(ComboIndex));
+
+    const float AttackSpeedRate = 1.0f;
+    float ComboEffectiveTime = (ComboActionData->EffectiveFrameCount[ComboIndex] / ComboActionData->FrameRate) / AttackSpeedRate;
+
+    if (ComboEffectiveTime > 0.0f)
+    {
+        GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &AABCharacterBase::ComboCheck, ComboEffectiveTime, false);
+    }
+}
+
+void AABCharacterBase::ComboCheck()
+{
+    ComboTimerHandle.Invalidate();
+    if (HasNextComboCommand)
+    {
+        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+        CurrentCombo = FMath::Clamp(CurrentCombo + 1, 1, ComboActionData->MaxComboCount);
+        FName NextSection = *FString::Printf(TEXT("%s%d"), *ComboActionData->MontageSectionNamePrefix, CurrentCombo);
+        AnimInstance->Montage_JumpToSection(NextSection, ComboActionMontage);
+        SetComboCheckTimer();
+        HasNextComboCommand = false;
+
+    }
+
+}
+
 
 
 

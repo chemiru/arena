@@ -12,7 +12,9 @@
 #include "CharacterStat/ABCharacterStatComponent.h"
 #include "UI/ABWidgetComponent.h"
 #include "UI/ABHpWidget.h"
+#include "Item/ABWeaponItemData.h"
 
+DEFINE_LOG_CATEGORY(LogABCharacter);
 
 // Sets default values
 AABCharacterBase::AABCharacterBase()
@@ -109,6 +111,16 @@ AABCharacterBase::AABCharacterBase()
         HpBar->SetDrawSize(FVector2D(150.0f, 15.0f));
         HpBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     }
+
+    //ItemActions
+    TakeItemActions.Add(FTakeItemDelegateWrapper(FOnTakeItemDelegate::CreateUObject(this, &AABCharacterBase::EquipWeapon)));
+    TakeItemActions.Add(FTakeItemDelegateWrapper(FOnTakeItemDelegate::CreateUObject(this, &AABCharacterBase::DrinkPotion)));
+    TakeItemActions.Add(FTakeItemDelegateWrapper(FOnTakeItemDelegate::CreateUObject(this, &AABCharacterBase::ReadScroll)));
+
+    //WeaponComponet
+    Weapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
+    Weapon->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
+
 
 }
 
@@ -287,6 +299,40 @@ void AABCharacterBase::SetupCharacterWidget(UABUserWidget* InUserWidget)
         HpBarWidget->UpdateHpBar(Stat->GetCurrentHp());
         Stat->OnHpChanged.AddUObject(HpBarWidget, &UABHpWidget::UpdateHpBar);
     }
+
+}
+
+void AABCharacterBase::TakeItem(UABItemData* InItemData)
+{
+    if (InItemData)
+    {
+        TakeItemActions[(uint8)InItemData->Type].ItemDelegate.ExecuteIfBound(InItemData);
+    }
+}
+
+void AABCharacterBase::DrinkPotion(UABItemData* InItemData)
+{
+    UE_LOG(LogABCharacter, Log, TEXT("DrinkPotion"));
+
+}
+
+void AABCharacterBase::EquipWeapon(UABItemData* InItemData)
+{
+    UABWeaponItemData* WeaponItemData = Cast<UABWeaponItemData>(InItemData);
+    if (WeaponItemData)
+    {
+        if (WeaponItemData->WeaponMesh.IsPending())
+        {   /*Weapon->SetSkeletalMesh(WeaponItemData->WeaponMesh);*/
+            WeaponItemData->WeaponMesh.LoadSynchronous();
+        }
+        Weapon->SetSkeletalMesh(WeaponItemData->WeaponMesh.Get());
+        
+    }
+}
+
+void AABCharacterBase::ReadScroll(UABItemData* InItemData)
+{
+    UE_LOG(LogABCharacter, Log, TEXT("ReadScroll"));
 
 }
 

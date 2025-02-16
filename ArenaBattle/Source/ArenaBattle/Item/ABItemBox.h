@@ -10,10 +10,15 @@ UCLASS()
 class ARENABATTLE_API AABItemBox : public AActor
 {
 	GENERATED_BODY()
-	
+public:
+	FORCEINLINE class UBoxComponent* GetTrigger() { return Trigger; }
+
 public:	
 	// Sets default values for this actor's properties
 	AABItemBox();
+
+protected:
+	virtual void PostInitializeComponents() override;
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = Box)

@@ -26,7 +26,7 @@ AABCharacterBase::AABCharacterBase()
 
     //Capsule
     GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-    GetCapsuleComponent()->SetCollisionProfileName(CPOFILE_ABCAPSULE);
+    GetCapsuleComponent()->SetCollisionProfileName(CPROFILE_ABCAPSULE);
 
     //Movement
     GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -239,7 +239,7 @@ void AABCharacterBase::AttackHitCheck()
 
     const float AttackRange = 40.f;
     const float AttackRadius = 50.0f;
-    const float AttackDamage = 30.0f;
+    const float AttackDamage = 100.0f;
     const FVector Start = GetActorLocation() + GetActorForwardVector() * GetCapsuleComponent()
         ->GetScaledCapsuleRadius();
     const FVector End = Start + GetActorForwardVector() * AttackRange;
@@ -320,9 +320,9 @@ void AABCharacterBase::EquipWeapon(UABItemData* InItemData)
 {
     UABWeaponItemData* WeaponItemData = Cast<UABWeaponItemData>(InItemData);
     if (WeaponItemData)
-    {
+    {  /*Weapon->SetSkeletalMesh(WeaponItemData->WeaponMesh);*/
         if (WeaponItemData->WeaponMesh.IsPending())
-        {   /*Weapon->SetSkeletalMesh(WeaponItemData->WeaponMesh);*/
+        {   
             WeaponItemData->WeaponMesh.LoadSynchronous();
         }
         Weapon->SetSkeletalMesh(WeaponItemData->WeaponMesh.Get());

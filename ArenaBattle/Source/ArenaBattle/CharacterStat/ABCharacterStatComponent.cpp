@@ -7,7 +7,8 @@
 // Sets default values for this component's properties
 UABCharacterStatComponent::UABCharacterStatComponent()
 {
-	CurrentLevel = 1;
+	CurrentLevel = 1.0f;
+	AttackRadius = 50.0f;
 
 }
 
